@@ -16,7 +16,9 @@
     <DeckManager 
       v-else-if="currentMode === 'decks'"
       :decks="ankiStore.decks"
+      :editing-deck="selectedDeck"
       @create-deck="createDeck"
+      @update-deck="updateDeck"
       @delete-deck="deleteDeck"
       @manage-cards="manageCards"
       @back="currentMode = 'dashboard'"
@@ -205,13 +207,15 @@ function handleReview(cardId: string, rating: number) {
   }
 }
 
-function createDeck(deck: Omit<Deck, 'id' | 'createdAt'>) {
+function createDeck(deck: Omit<Deck, 'id' | 'createdAt' | 'updatedAt'>) {
   ankiStore.createDeck(deck.name, deck.description)
+  currentMode.value = 'dashboard'
 }
 
-function updateDeck(deckId: string, name: string, description?: string) {
-  // Implementar en el store
-  console.log('Update deck:', deckId, name, description)
+function updateDeck(deck: { id: string; name: string; description?: string }) {
+  ankiStore.updateDeck(deck.id, deck.name, deck.description)
+  selectedDeckId.value = null
+  currentMode.value = 'dashboard'
 }
 
 function deleteDeck(id: string) {

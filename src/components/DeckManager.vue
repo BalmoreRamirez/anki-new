@@ -22,8 +22,8 @@
         <template #header>
           <div class="p-6 pb-0">
             <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-              <i class="pi pi-plus-circle mr-3 text-blue-600"></i>
-              Create New Deck
+              <i class="pi mr-3 text-blue-600" :class="isEditing ? 'pi-pencil' : 'pi-plus-circle'"></i>
+              {{ isEditing ? 'Edit Deck' : 'Create New Deck' }}
             </h2>
           </div>
         </template>
@@ -78,8 +78,8 @@
               <div class="flex justify-end">
                 <Button 
                   type="submit"
-                  icon="pi pi-plus"
-                  label="Create Deck"
+                  :icon="isEditing ? 'pi pi-check' : 'pi pi-plus'"
+                  :label="isEditing ? 'Update Deck' : 'Create Deck'"
                   :disabled="!deckForm.name.trim()"
                   class="bg-green-500 hover:bg-green-600 border-green-500 text-white font-medium py-2 px-6 rounded-lg transition-all duration-200 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -203,7 +203,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch, computed, onMounted } from 'vue'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -214,12 +214,14 @@ import type { Deck } from '@/types'
 
 interface Props {
   decks: Deck[]
+  editingDeck?: Deck | null
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  'create-deck': [deck: Omit<Deck, 'id' | 'createdAt'>]
+  'create-deck': [deck: Omit<Deck, 'id' | 'createdAt' | 'updatedAt'>]
+  'update-deck': [deck: { id: string; name: string; description?: string }]
   'delete-deck': [id: string]
   'manage-cards': [deck: Deck]
   'back': []
@@ -246,17 +248,44 @@ const deckForm = reactive({
 const deleteDialogVisible = ref(false)
 const deckToDelete = ref<Deck | null>(null)
 
+const isEditing = computed(() => !!props.editingDeck)
+
+// Watch for editing deck changes to populate form
+watch(() => props.editingDeck, (editingDeck) => {
+  if (editingDeck) {
+    deckForm.name = editingDeck.name
+    deckForm.description = editingDeck.description || ''
+    deckForm.category = 'Other' // Default category since it's not stored in deck
+  } else {
+    // Reset form when not editing
+    deckForm.name = ''
+    deckForm.description = ''
+    deckForm.category = ''
+  }
+}, { immediate: true })
+
 function saveDeck() {
   if (!deckForm.name.trim()) return
 
-  const newDeck = {
-    name: deckForm.name.trim(),
-    description: deckForm.description.trim(),
-    category: deckForm.category,
-    cards: []
+  if (isEditing.value && props.editingDeck) {
+    // Editing existing deck
+    const updatedDeck = {
+      id: props.editingDeck.id,
+      name: deckForm.name.trim(),
+      description: deckForm.description.trim() || undefined
+    }
+    
+    emit('update-deck', updatedDeck)
+  } else {
+    // Creating new deck
+    const newDeck = {
+      name: deckForm.name.trim(),
+      description: deckForm.description.trim() || undefined,
+      cards: []
+    }
+    
+    emit('create-deck', newDeck)
   }
-  
-  emit('create-deck', newDeck)
 
   // Reset form
   deckForm.name = ''

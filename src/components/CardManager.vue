@@ -329,7 +329,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-defineEmits<{
+const emit = defineEmits<{
   'add-card': [card: Omit<Flashcard, 'id' | 'createdAt'>]
   'update-card': [card: Flashcard]
   'delete-card': [cardId: string]
@@ -403,27 +403,23 @@ function saveCard() {
     // Update existing card
     const updatedCard: Flashcard = {
       ...editingCard.value,
-      front: cardForm.front.trim(),
-      back: cardForm.back.trim(),
+      english: cardForm.front.trim(),  // front = english
+      spanish: cardForm.back.trim(),   // back = spanish
       pronunciation: cardForm.pronunciation.trim() || undefined,
-      examples: cleanExamples.length > 0 ? cleanExamples : undefined
+      examples: cleanExamples.length > 0 ? cleanExamples : undefined,
+      updatedAt: new Date()
     }
-    props.$emit('update-card', updatedCard)
+    emit('update-card', updatedCard)
     editingCard.value = null
   } else {
     // Create new card
     const newCard = {
-      front: cardForm.front.trim(),
-      back: cardForm.back.trim(),
+      english: cardForm.front.trim(),  // front = english
+      spanish: cardForm.back.trim(),   // back = spanish
       pronunciation: cardForm.pronunciation.trim() || undefined,
-      examples: cleanExamples.length > 0 ? cleanExamples : undefined,
-      easeFactor: 2.5,
-      interval: 1,
-      reviewCount: 0,
-      lastReviewed: undefined,
-      nextReview: undefined
+      examples: cleanExamples.length > 0 ? cleanExamples : undefined
     }
-    props.$emit('add-card', newCard)
+    emit('add-card', newCard)
   }
 
   // Reset form
@@ -432,8 +428,8 @@ function saveCard() {
 
 function editCard(card: Flashcard) {
   editingCard.value = card
-  cardForm.front = card.front
-  cardForm.back = card.back
+  cardForm.front = card.english // English goes to front (what user sees first)
+  cardForm.back = card.spanish  // Spanish goes to back (the translation)
   cardForm.pronunciation = card.pronunciation || ''
   cardForm.examples = card.examples ? [...card.examples] : ['']
 }
@@ -467,14 +463,14 @@ function confirmDeleteCard(card: Flashcard) {
 
 function deleteCard() {
   if (cardToDelete.value) {
-    props.$emit('delete-card', cardToDelete.value.id)
+    emit('delete-card', cardToDelete.value.id)
     deleteDialogVisible.value = false
     cardToDelete.value = null
   }
 }
 
 function resetCardProgress(card: Flashcard) {
-  props.$emit('reset-card', card.id)
+  emit('reset-card', card.id)
 }
 
 function formatDate(date: string | Date) {

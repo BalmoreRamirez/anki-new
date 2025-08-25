@@ -81,6 +81,16 @@ export const useAnkiStore = defineStore('anki', () => {
     }
   }
 
+  function updateDeck(deckId: string, name: string, description?: string) {
+    const deck = getDeckById.value(deckId)
+    if (deck) {
+      deck.name = name
+      deck.description = description
+      deck.updatedAt = new Date()
+      saveToLocalStorage()
+    }
+  }
+
   function addCard(deckId: string, spanish: string, english: string, pronunciation?: string, examples?: string[]) {
     const deck = getDeckById.value(deckId)
     if (!deck) return
@@ -341,6 +351,7 @@ export const useAnkiStore = defineStore('anki', () => {
     
     // Actions
     createDeck,
+    updateDeck,
     deleteDeck,
     addCard,
     deleteCard,
