@@ -5,7 +5,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div class="mb-4 sm:mb-0">
           <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">{{ deckName }}</h1>
-          <p class="text-white/80">Card {{ currentCardIndex + 1 }} of {{ totalCards }}</p>
+          <p class="text-white/80">Card {{ currentCardIndex + 1 }} of {{ totalCards }} • {{ remainingCards }} remaining</p>
         </div>
         <div class="flex items-center space-x-4">
           <div class="bg-white/30 px-4 py-2 rounded-lg">
@@ -176,6 +176,8 @@ interface Props {
   currentCardIndex: number
   totalCards: number
   remainingCards: number
+  completedCards: number
+  originalTotal: number
 }
 
 const props = defineProps<Props>()
@@ -193,8 +195,8 @@ const sessionStats = ref({
 })
 
 const progressPercentage = computed(() => {
-  if (props.totalCards === 0) return 0
-  return Math.round(((props.totalCards - props.remainingCards) / props.totalCards) * 100)
+  if (props.originalTotal === 0) return 0
+  return Math.round((props.completedCards / props.originalTotal) * 100)
 })
 
 function flipCard() {
@@ -218,11 +220,60 @@ function reviewCard(rating: number) {
 }
 
 function playPronunciation() {
-  if (props.card.spanish && 'speechSynthesis' in window) {
-    const utterance = new SpeechSynthesisUtterance(props.card.spanish)
+  if (!props.card.english || !('speechSynthesis' in window)) return
+  
+  // Función para reproducir cuando las voces estén listas
+  const speak = () => {
+    const utterance = new SpeechSynthesisUtterance(props.card.english)
     utterance.lang = 'en-US'
     utterance.rate = 0.8
+    utterance.pitch = 1.0
+    utterance.volume = 0.9
+    
+    // Buscar la mejor voz disponible en inglés
+    const voices = speechSynthesis.getVoices()
+    const preferredVoices = [
+      // Voces de alta calidad preferidas
+      'Google US English',
+      'Microsoft Zira - English (United States)',
+      'Microsoft David - English (United States)', 
+      'Karen',
+      'Daniel',
+      'Alex',
+      'Samantha'
+    ]
+    
+    let selectedVoice = null
+    
+    // Buscar voces preferidas
+    for (const preferredName of preferredVoices) {
+      selectedVoice = voices.find(voice => 
+        voice.name.includes(preferredName) && voice.lang.startsWith('en-')
+      )
+      if (selectedVoice) break
+    }
+    
+    // Si no encontró una voz preferida, usar cualquier voz en inglés
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice => 
+        voice.lang.startsWith('en-') && 
+        (voice.lang === 'en-US' || voice.lang === 'en-GB')
+      )
+    }
+    
+    if (selectedVoice) {
+      utterance.voice = selectedVoice
+      console.log('Using voice:', selectedVoice.name, selectedVoice.lang)
+    }
+    
     speechSynthesis.speak(utterance)
+  }
+  
+  // Si las voces no están cargadas, esperar a que se carguen
+  if (speechSynthesis.getVoices().length === 0) {
+    speechSynthesis.addEventListener('voiceschanged', speak, { once: true })
+  } else {
+    speak()
   }
 }
 

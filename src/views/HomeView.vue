@@ -49,7 +49,7 @@
           class="mt-2"
         />
         <p class="text-sm text-500 mt-1">
-          {{ ankiStore.currentSession?.completedCards || 0 }} / {{ ankiStore.currentSession?.totalCards || 0 }} cards completed
+          {{ ankiStore.currentSession?.completedCards || 0 }} completed ({{ ankiStore.currentSession?.cardsToReview.length || 0 }} remaining)
         </p>
       </div>
 
@@ -58,8 +58,10 @@
         :card="currentCard"
         :deck-name="selectedDeck.name"
         :current-card-index="ankiStore.currentSession?.currentCardIndex || 0"
-        :total-cards="ankiStore.currentSession?.totalCards || 0"
-        :remaining-cards="(ankiStore.currentSession?.totalCards || 0) - (ankiStore.currentSession?.completedCards || 0)"
+        :total-cards="ankiStore.currentSession?.cardsToReview.length || 0"
+        :remaining-cards="ankiStore.currentSession?.cardsToReview.length || 0"
+        :completed-cards="ankiStore.currentSession?.completedCards || 0"
+        :original-total="ankiStore.currentSession?.totalCards || 0"
         @review="handleReview"
         @exit="endStudySession"
       />
