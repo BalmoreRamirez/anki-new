@@ -14,11 +14,73 @@ export interface Flashcard {
   updatedAt: Date
 }
 
+export interface DeckSettings {
+  id: string
+  deckId: string
+  // Configuración de algoritmo SM2
+  easeFactor: {
+    initial: number
+    minimum: number
+    maximum: number
+  }
+  intervals: {
+    learning: number[]
+    graduating: number
+    easy: number
+  }
+  // Configuración de estudio
+  newCardsPerDay: number
+  reviewsPerDay: number
+  showAnswer: boolean
+  autoPlayAudio: boolean
+  // Configuración visual
+  cardLayout: 'standard' | 'compact' | 'detailed'
+  fontSize: 'small' | 'medium' | 'large'
+  theme: 'light' | 'dark' | 'auto'
+  // Configuración de notificaciones
+  studyReminders: boolean
+  reminderTime: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface GlobalSettings {
+  id: string
+  userId: string
+  // Configuración general
+  language: 'en' | 'es' | 'auto'
+  timezone: string
+  // Configuración de estudio por defecto
+  defaultDeckSettings: Omit<DeckSettings, 'id' | 'deckId' | 'createdAt' | 'updatedAt'>
+  // Configuración de la aplicación
+  enableTTS: boolean
+  ttsVoice: string
+  ttsSpeed: number
+  // Configuración de Firebase
+  autoSync: boolean
+  offlineMode: boolean
+  // Configuración de backup
+  autoBackup: boolean
+  backupFrequency: 'daily' | 'weekly' | 'monthly'
+  // Estadísticas globales
+  studyStreak: number
+  totalStudyTime: number
+  preferredStudyTime: string[]
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface Deck {
   id: string
   name: string
   description?: string
   cards: Flashcard[]
+  settings?: DeckSettings
+  tags: string[]
+  category: string
+  isPublic: boolean
+  difficulty: 'beginner' | 'intermediate' | 'advanced'
+  estimatedTime: number // minutos para completar
   createdAt: Date
   updatedAt: Date
 }

@@ -115,7 +115,7 @@ import CardManager from "../components/CardManager.vue";
 import FlashCard from "../components/FlashCard.vue";
 import Button from "primevue/button";
 import ProgressBar from "primevue/progressbar";
-import type { ReviewResponse, Deck } from "../types";
+import type { ReviewResponse, Deck, Flashcard } from "../types";
 
 const ankiStore = useAnkiStore();
 
@@ -139,12 +139,44 @@ const studyProgress = computed(() => {
   return (session.completedCards / session.totalCards) * 100;
 });
 
-onMounted(() => {
-  ankiStore.loadFromLocalStorage();
-  ankiStore.initializeDefaultData();
-  console.log("Decks loaded:", ankiStore.decks.length);
+onMounted(async () => {
+  try {
+    // Cargar datos desde localStorage primero
+    ankiStore.loadFromLocalStorage();
+    
+    // Inicializar datos por defecto
+    await ankiStore.initializeDefaultData();
+    
+    // Migrar automáticamente a Firebase (ya que siempre usamos Firebase ahora)
+    console.log('🔥 Migrating to Firebase automatically...');
+    await ankiStore.loadFromFirebase();
+    
+    // Si no hay datos en Firebase, migrar desde localStorage
+    if (ankiStore.decks.length === 0) {
+      // Volver a cargar desde localStorage para tener los datos predeterminados
+      ankiStore.loadFromLocalStorage();
+      await ankiStore.initializeDefaultData();
+      console.log('📤 Migrating default data to Firebase...');
+      await ankiStore.migrateToFirebase();
+    }
+    
+    // Configurar escucha en tiempo real
+    ankiStore.subscribeToFirebaseChanges();
+    
+    // Initialize configuration after Firebase setup
+    await ankiStore.initializeConfiguration();
+    
+    console.log('✅ Firebase setup complete!');
+  } catch (error) {
+    console.error('❌ Firebase migration failed:', error);
+    // Usar localStorage como fallback
+    ankiStore.loadFromLocalStorage();
+    await ankiStore.initializeDefaultData();
+  }
+  
+  console.log("📚 Decks loaded:", ankiStore.decks.length);
   ankiStore.decks.forEach((deck) => {
-    console.log("Deck:", deck.name, "Cards:", deck.cards.length);
+    console.log("📖 Deck:", deck.name, "Cards:", deck.cards.length);
   });
 });
 
@@ -207,35 +239,42 @@ function handleReview(cardId: string, rating: number) {
   }
 }
 
-function createDeck(deck: Omit<Deck, "id" | "createdAt" | "updatedAt">) {
-  ankiStore.createDeck(deck.name, deck.description);
-  currentMode.value = "dashboard";
+async function createDeck(deck: Omit<Deck, "id" | "createdAt" | "updatedAt">) {
+  try {
+    await ankiStore.createDeck(deck.name, deck.description);
+    currentMode.value = "dashboard";
+  } catch (error) {
+    console.error('Error creating deck:', error);
+  }
 }
 
-function updateDeck(deck: { id: string; name: string; description?: string }) {
-  ankiStore.updateDeck(deck.id, deck.name, deck.description);
-  selectedDeckId.value = null;
-  currentMode.value = "dashboard";
+async function updateDeck(deck: { id: string; name: string; description?: string }) {
+  try {
+    await ankiStore.updateDeck(deck.id, deck.name, deck.description);
+    selectedDeckId.value = null;
+    currentMode.value = "dashboard";
+  } catch (error) {
+    console.error('Error updating deck:', error);
+  }
 }
 
 function deleteDeck(id: string) {
   ankiStore.deleteDeck(id);
 }
 
-function addCard(
-  spanish: string,
-  english: string,
-  pronunciation?: string,
-  examples?: string[]
-) {
+async function addCard(card: Omit<Flashcard, "id" | "createdAt">) {
   if (selectedDeckId.value) {
-    ankiStore.addCard(
-      selectedDeckId.value,
-      spanish,
-      english,
-      pronunciation,
-      examples
-    );
+    try {
+      await ankiStore.addCard(
+        selectedDeckId.value,
+        card.spanish,
+        card.english,
+        card.pronunciation,
+        card.examples
+      );
+    } catch (error) {
+      console.error('Error adding card:', error);
+    }
   }
 }
 
@@ -257,8 +296,12 @@ function updateCard(
   );
 }
 
-function deleteCard(cardId: string) {
-  ankiStore.deleteCard(cardId);
+async function deleteCard(cardId: string) {
+  try {
+    await ankiStore.deleteCard(cardId);
+  } catch (error) {
+    console.error('Error deleting card:', error);
+  }
 }
 
 function startRandomStudy() {
