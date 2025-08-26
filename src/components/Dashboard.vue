@@ -125,7 +125,7 @@
             class="bg-green-500 hover:bg-green-600 border-green-500 px-6 py-3 text-white font-semibold rounded-lg transition-all duration-200 hover:-translate-y-1"
           />
         </div>
-      </div>ass="mb-8 p-6 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30">
+      </div>
       <div class="flex items-center space-x-4">
         <div class="flex-shrink-0 w-16 h-16 bg-white/30 rounded-full flex items-center justify-center">
           <i class="pi pi-graduation-cap text-2xl text-white"></i>
