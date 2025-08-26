@@ -13,7 +13,7 @@ import {
   writeBatch,
   setDoc
 } from 'firebase/firestore'
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth'
+import { onAuthStateChanged } from 'firebase/auth'
 import { db, auth } from '@/config/firebase'
 import type { Deck, Flashcard } from '@/types'
 
@@ -31,16 +31,12 @@ export class FirebaseService {
       onAuthStateChanged(auth, async (user) => {
         if (user) {
           this.isAuthenticated = true
-          console.log('✅ Firebase authenticated:', user.uid)
+          console.log('✅ Firebase authenticated:', user.email || user.uid)
           resolve()
         } else {
-          try {
-            await signInAnonymously(auth)
-            console.log('🔐 Firebase anonymous authentication successful')
-          } catch (error) {
-            console.error('❌ Firebase authentication failed:', error)
-            resolve() // Continue anyway, but operations may fail
-          }
+          this.isAuthenticated = false
+          console.log('❌ User not authenticated')
+          resolve()
         }
       })
     })

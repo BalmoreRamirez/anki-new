@@ -1,15 +1,37 @@
 <template>
   <main class="home-view">
-    <!-- Modo Dashboard -->
-    <Dashboard
-      v-if="currentMode === 'dashboard'"
-      :decks="ankiStore.decks"
-      @study-deck="handleStudyDeck"
-      @create-deck="currentMode = 'decks'"
-      @edit-deck="editDeck"
-      @delete-deck="deleteDeck"
-      @manage-cards="manageCards"
-    />
+    <!-- Vista de autenticación -->
+    <div v-if="!user">
+      <LoginView />
+    </div>
+
+    <!-- Aplicación principal (cuando el usuario está autenticado) -->
+    <div v-else>
+      <!-- Header con información del usuario -->
+      <div class="user-header">
+        <div class="user-info">
+          <i class="pi pi-user"></i>
+          <span>{{ user.email }}</span>
+        </div>
+        <Button 
+          icon="pi pi-sign-out" 
+          text 
+          severity="secondary"
+          @click="signOut"
+          label="Salir"
+        />
+      </div>
+
+      <!-- Modo Dashboard -->
+      <Dashboard
+        v-if="currentMode === 'dashboard'"
+        :decks="ankiStore.decks"
+        @study-deck="handleStudyDeck"
+        @create-deck="currentMode = 'decks'"
+        @edit-deck="editDeck"
+        @delete-deck="deleteDeck"
+        @manage-cards="manageCards"
+      />
 
     <!-- Modo Gestión de Barajas -->
     <!-- Modo Gestión de Barajas -->
@@ -87,9 +109,10 @@
         </div>
       </div>
     </div>
+    </div> <!-- Cierre del div principal de la aplicación autenticada -->
 
-    <!-- Navegación inferior -->
-    <div class="bottom-nav" v-if="currentMode !== 'study'">
+    <!-- Navegación inferior (solo cuando está autenticado) -->
+    <div class="bottom-nav" v-if="user && currentMode !== 'study'">
       <Button
         :class="{ active: currentMode === 'dashboard' }"
         icon="pi pi-home"
@@ -107,17 +130,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useAnkiStore } from "../stores/anki";
+import { useAuthStore } from "../stores/auth";
 import Dashboard from "../components/Dashboard.vue";
 import DeckManager from "../components/DeckManager.vue";
 import CardManager from "../components/CardManager.vue";
 import FlashCard from "../components/FlashCard.vue";
+import LoginView from "../components/LoginView.vue";
 import Button from "primevue/button";
 import ProgressBar from "primevue/progressbar";
 import type { ReviewResponse, Deck, Flashcard } from "../types";
 
 const ankiStore = useAnkiStore();
+const authStore = useAuthStore();
+
+// Variables de autenticación
+const user = computed(() => authStore.user);
 
 const currentMode = ref<"dashboard" | "decks" | "cards" | "study">("dashboard");
 const selectedDeckId = ref<string | null>(null);
@@ -140,6 +169,22 @@ const studyProgress = computed(() => {
 });
 
 onMounted(async () => {
+  // No cargar datos hasta que el usuario esté autenticado
+  // El watcher de authStore.user se encargará de inicializar los datos
+});
+
+// Watch for authentication changes
+watch(() => authStore.user, async (user) => {
+  if (user) {
+    // User is authenticated, now load their data
+    await initializeUserData();
+  } else {
+    // User signed out, clear data
+    ankiStore.resetStore();
+  }
+}, { immediate: true });
+
+async function initializeUserData() {
   try {
     // Cargar datos desde localStorage primero
     ankiStore.loadFromLocalStorage();
@@ -161,7 +206,7 @@ onMounted(async () => {
     }
     
     // Configurar escucha en tiempo real
-    ankiStore.subscribeToFirebaseChanges();
+    await ankiStore.subscribeToFirebaseChanges();
     
     // Initialize configuration after Firebase setup
     await ankiStore.initializeConfiguration();
@@ -178,7 +223,7 @@ onMounted(async () => {
   ankiStore.decks.forEach((deck) => {
     console.log("📖 Deck:", deck.name, "Cards:", deck.cards.length);
   });
-});
+}
 
 function startStudySession(deckId: string) {
   const success = ankiStore.startReviewSession(deckId);
@@ -307,6 +352,10 @@ async function deleteCard(cardId: string) {
 function startRandomStudy() {
   // Implementar estudio aleatorio
   console.log("Random study not implemented yet");
+}
+
+async function signOut() {
+  await authStore.signOut();
 }
 </script>
 
@@ -528,5 +577,70 @@ function startRandomStudy() {
 
 .bottom-nav {
   animation: fadeInUp 0.6s ease-out;
+}
+
+/* Estilos para el header del usuario */
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.user-info i {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+.user-header .p-button {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+  transition: all 0.3s ease;
+}
+
+.user-header .p-button:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .user-header {
+    padding: 0.875rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .user-info {
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .user-info i {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.75rem;
+  }
 }
 </style>

@@ -144,9 +144,17 @@ export const useAnkiStore = defineStore('anki', () => {
     }
   }
 
-  function subscribeToFirebaseChanges() {
+  async function subscribeToFirebaseChanges() {
     if (!useFirebase.value) return
     
+    // Check if user is authenticated before subscribing
+    const { auth } = await import('../config/firebase')
+    if (!auth.currentUser) {
+      console.log('⚠️ No authenticated user, skipping Firebase subscription')
+      return
+    }
+    
+    console.log('🔥 Subscribing to Firebase changes for user:', auth.currentUser.email)
     return FirebaseService.subscribeToDecks((firebaseDecks) => {
       decks.value = firebaseDecks
       console.log('Real-time update: received', firebaseDecks.length, 'decks')
@@ -935,6 +943,17 @@ export const useAnkiStore = defineStore('anki', () => {
     }
   }
 
+  // Reset store to initial state
+  function resetStore(): void {
+    decks.value = []
+    currentSession.value = null
+    showAnswer.value = false
+    isLoading.value = false
+    error.value = null
+    globalSettings.value = null
+    deckSettings.value = new Map()
+  }
+
   return {
     // State
     decks,
@@ -971,6 +990,7 @@ export const useAnkiStore = defineStore('anki', () => {
     saveToLocalStorage,
     loadFromLocalStorage,
     initializeDefaultData,
+    resetStore,
 
     // Configuration Management
     loadGlobalSettings,
