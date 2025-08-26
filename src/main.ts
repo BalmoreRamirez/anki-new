@@ -11,17 +11,9 @@ import ConfirmationService from 'primevue/confirmationservice'
 import App from './App.vue'
 import router from './router'
 
-// Import auth store to initialize authentication listener
-import { useAuthStore } from './stores/auth'
-
 const app = createApp(App)
 
 app.use(createPinia())
-
-// Initialize auth listener after Pinia is set up
-const authStore = useAuthStore()
-authStore.initAuthListener()
-
 app.use(router)
 app.use(PrimeVue, {
     theme: {
