@@ -1,7 +1,7 @@
 <template>
   <main class="home-view">
     <!-- Modo Dashboard -->
-    <Dashboard 
+    <Dashboard
       v-if="currentMode === 'dashboard'"
       :decks="ankiStore.decks"
       @study-deck="handleStudyDeck"
@@ -12,8 +12,8 @@
     />
 
     <!-- Modo Gestión de Barajas -->
-        <!-- Modo Gestión de Barajas -->
-    <DeckManager 
+    <!-- Modo Gestión de Barajas -->
+    <DeckManager
       v-else-if="currentMode === 'decks'"
       :decks="ankiStore.decks"
       :editing-deck="selectedDeck"
@@ -25,7 +25,7 @@
     />
 
     <!-- Modo Gestión de Tarjetas -->
-    <CardManager 
+    <CardManager
       v-else-if="currentMode === 'cards'"
       :deck="selectedDeck"
       @back="currentMode = 'decks'"
@@ -39,23 +39,23 @@
       <div class="study-header mb-4">
         <div class="flex justify-content-between align-items-center">
           <h2>Studying: {{ selectedDeck?.name }}</h2>
-          <Button 
-            label="End Session" 
-            icon="pi pi-times" 
+          <Button
+            label="End Session"
+            icon="pi pi-times"
             severity="secondary"
             @click="endStudySession"
           />
         </div>
-        <ProgressBar 
-          :value="studyProgress" 
-          class="mt-2"
-        />
+        <ProgressBar :value="studyProgress" class="mt-2" />
         <p class="text-sm text-500 mt-1">
-          {{ ankiStore.currentSession?.completedCards || 0 }} completed ({{ ankiStore.currentSession?.cardsToReview.length || 0 }} remaining)
+          {{ ankiStore.currentSession?.completedCards || 0 }} completed ({{
+            ankiStore.currentSession?.cardsToReview.length || 0
+          }}
+          remaining)
         </p>
       </div>
 
-      <FlashCard 
+      <FlashCard
         v-if="currentCard && selectedDeck"
         :card="currentCard"
         :deck-name="selectedDeck.name"
@@ -73,14 +73,14 @@
         <h3 class="text-2xl mb-2">Study Session Complete!</h3>
         <p class="text-500 mb-4">Great job! You've reviewed all cards.</p>
         <div class="flex justify-content-center gap-2">
-          <Button 
-            label="Back to Dashboard" 
-            icon="pi pi-home" 
+          <Button
+            label="Back to Dashboard"
+            icon="pi pi-home"
             @click="currentMode = 'dashboard'"
           />
-          <Button 
-            label="Study Another Deck" 
-            icon="pi pi-refresh" 
+          <Button
+            label="Study Another Deck"
+            icon="pi pi-refresh"
             severity="secondary"
             @click="currentMode = 'decks'"
           />
@@ -90,15 +90,15 @@
 
     <!-- Navegación inferior -->
     <div class="bottom-nav" v-if="currentMode !== 'study'">
-      <Button 
-        :class="{ 'active': currentMode === 'dashboard' }"
-        icon="pi pi-home" 
+      <Button
+        :class="{ active: currentMode === 'dashboard' }"
+        icon="pi pi-home"
         text
         @click="currentMode = 'dashboard'"
       />
-      <Button 
-        :class="{ 'active': currentMode === 'decks' }"
-        icon="pi pi-folder" 
+      <Button
+        :class="{ active: currentMode === 'decks' }"
+        icon="pi pi-folder"
         text
         @click="currentMode = 'decks'"
       />
@@ -107,139 +107,163 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useAnkiStore } from '../stores/anki'
-import Dashboard from '../components/Dashboard.vue'
-import DeckManager from '../components/DeckManager.vue'
-import CardManager from '../components/CardManager.vue'
-import FlashCard from '../components/FlashCard.vue'
-import Button from 'primevue/button'
-import ProgressBar from 'primevue/progressbar'
-import type { ReviewResponse, Deck } from '../types'
+import { ref, computed, onMounted } from "vue";
+import { useAnkiStore } from "../stores/anki";
+import Dashboard from "../components/Dashboard.vue";
+import DeckManager from "../components/DeckManager.vue";
+import CardManager from "../components/CardManager.vue";
+import FlashCard from "../components/FlashCard.vue";
+import Button from "primevue/button";
+import ProgressBar from "primevue/progressbar";
+import type { ReviewResponse, Deck } from "../types";
 
-const ankiStore = useAnkiStore()
+const ankiStore = useAnkiStore();
 
-const currentMode = ref<'dashboard' | 'decks' | 'cards' | 'study'>('dashboard')
-const selectedDeckId = ref<string | null>(null)
+const currentMode = ref<"dashboard" | "decks" | "cards" | "study">("dashboard");
+const selectedDeckId = ref<string | null>(null);
 
 const selectedDeck = computed(() => {
-  if (!selectedDeckId.value) return null
-  return ankiStore.getDeckById(selectedDeckId.value) || null
-})
+  if (!selectedDeckId.value) return null;
+  return ankiStore.getDeckById(selectedDeckId.value) || null;
+});
 
 const currentCard = computed(() => {
-  if (!ankiStore.currentSession) return null
-  const session = ankiStore.currentSession
-  return session.cardsToReview[session.currentCardIndex]
-})
+  if (!ankiStore.currentSession) return null;
+  const session = ankiStore.currentSession;
+  return session.cardsToReview[session.currentCardIndex];
+});
 
 const studyProgress = computed(() => {
-  if (!ankiStore.currentSession) return 0
-  const session = ankiStore.currentSession
-  return (session.completedCards / session.totalCards) * 100
-})
+  if (!ankiStore.currentSession) return 0;
+  const session = ankiStore.currentSession;
+  return (session.completedCards / session.totalCards) * 100;
+});
 
 onMounted(() => {
-  ankiStore.loadFromLocalStorage()
-  ankiStore.initializeDefaultData()
-  console.log('Decks loaded:', ankiStore.decks.length)
-  ankiStore.decks.forEach(deck => {
-    console.log('Deck:', deck.name, 'Cards:', deck.cards.length)
-  })
-})
+  ankiStore.loadFromLocalStorage();
+  ankiStore.initializeDefaultData();
+  console.log("Decks loaded:", ankiStore.decks.length);
+  ankiStore.decks.forEach((deck) => {
+    console.log("Deck:", deck.name, "Cards:", deck.cards.length);
+  });
+});
 
 function startStudySession(deckId: string) {
-  const success = ankiStore.startReviewSession(deckId)
+  const success = ankiStore.startReviewSession(deckId);
   if (success) {
-    selectedDeckId.value = deckId
-    currentMode.value = 'study'
+    selectedDeckId.value = deckId;
+    currentMode.value = "study";
   } else {
     // No hay tarjetas para revisar
-    console.log('No cards to review')
+    console.log("No cards to review");
   }
 }
 
 function handleStudyDeck(deck: Deck) {
-  startStudySession(deck.id)
+  startStudySession(deck.id);
 }
 
 function editDeck(deck: Deck) {
   // Navegar a modo deck manager con deck seleccionado para editar
-  selectedDeckId.value = deck.id
-  currentMode.value = 'decks'
+  selectedDeckId.value = deck.id;
+  currentMode.value = "decks";
 }
 
 function endStudySession() {
-  ankiStore.endReviewSession()
-  currentMode.value = 'dashboard'
+  ankiStore.endReviewSession();
+  currentMode.value = "dashboard";
 }
 
 function manageCards(deck: Deck) {
-  selectedDeckId.value = deck.id
-  currentMode.value = 'cards'
+  selectedDeckId.value = deck.id;
+  currentMode.value = "cards";
 }
 
 function handleReview(cardId: string, rating: number) {
   // Convertir rating numérico a ReviewResponse
-  let response: ReviewResponse
+  let response: ReviewResponse;
   switch (rating) {
     case 1:
-      response = 'again'
-      break
+      response = "again";
+      break;
     case 2:
-      response = 'hard'
-      break
+      response = "hard";
+      break;
     case 3:
-      response = 'good'
-      break
+      response = "good";
+      break;
     case 4:
-      response = 'easy'
-      break
+      response = "easy";
+      break;
     default:
-      response = 'good'
+      response = "good";
   }
-  
-  ankiStore.reviewCard(response)
-  
+
+  ankiStore.reviewCard(response);
+
   // Si la sesión terminó, volver al dashboard
   if (!ankiStore.currentSession) {
-    currentMode.value = 'dashboard'
+    currentMode.value = "dashboard";
   }
 }
 
-function createDeck(deck: Omit<Deck, 'id' | 'createdAt' | 'updatedAt'>) {
-  ankiStore.createDeck(deck.name, deck.description)
-  currentMode.value = 'dashboard'
+function createDeck(deck: Omit<Deck, "id" | "createdAt" | "updatedAt">) {
+  ankiStore.createDeck(deck.name, deck.description);
+  currentMode.value = "dashboard";
 }
 
 function updateDeck(deck: { id: string; name: string; description?: string }) {
-  ankiStore.updateDeck(deck.id, deck.name, deck.description)
-  selectedDeckId.value = null
-  currentMode.value = 'dashboard'
+  ankiStore.updateDeck(deck.id, deck.name, deck.description);
+  selectedDeckId.value = null;
+  currentMode.value = "dashboard";
 }
 
 function deleteDeck(id: string) {
-  ankiStore.deleteDeck(id)
+  ankiStore.deleteDeck(id);
 }
 
-function addCard(spanish: string, english: string, pronunciation?: string, examples?: string[]) {
+function addCard(
+  spanish: string,
+  english: string,
+  pronunciation?: string,
+  examples?: string[]
+) {
   if (selectedDeckId.value) {
-    ankiStore.addCard(selectedDeckId.value, spanish, english, pronunciation, examples)
+    ankiStore.addCard(
+      selectedDeckId.value,
+      spanish,
+      english,
+      pronunciation,
+      examples
+    );
   }
 }
 
-function updateCard(cardId: string, spanish: string, english: string, pronunciation?: string, examples?: string[]) {
+function updateCard(
+  cardId: string,
+  spanish: string,
+  english: string,
+  pronunciation?: string,
+  examples?: string[]
+) {
   // Implementar en el store
-  console.log('Update card:', cardId, spanish, english, pronunciation, examples)
+  console.log(
+    "Update card:",
+    cardId,
+    spanish,
+    english,
+    pronunciation,
+    examples
+  );
 }
 
 function deleteCard(cardId: string) {
-  ankiStore.deleteCard(cardId)
+  ankiStore.deleteCard(cardId);
 }
 
 function startRandomStudy() {
   // Implementar estudio aleatorio
-  console.log('Random study not implemented yet')
+  console.log("Random study not implemented yet");
 }
 </script>
 
@@ -367,49 +391,49 @@ function startRandomStudy() {
     padding: 0.5rem;
     padding-bottom: 90px;
   }
-  
+
   .study-header {
     padding: 1rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .study-header h2 {
     font-size: 1.25rem;
   }
-  
+
   .study-header .flex {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-  
+
   .study-complete {
     padding: 2rem 1rem;
   }
-  
+
   .study-complete h3 {
     font-size: 1.5rem;
   }
-  
+
   .study-complete p {
     font-size: 1rem;
   }
-  
+
   .study-complete .flex {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .bottom-nav {
     padding: 0.75rem;
     gap: 2rem;
   }
-  
+
   .bottom-nav .p-button {
     width: 3rem;
     height: 3rem;
   }
-  
+
   .bottom-nav .p-button i {
     font-size: 1.1rem;
   }
@@ -419,24 +443,24 @@ function startRandomStudy() {
   .study-complete {
     padding: 1.5rem 0.75rem;
   }
-  
+
   .study-complete i {
     font-size: 4rem;
   }
-  
+
   .study-complete h3 {
     font-size: 1.25rem;
   }
-  
+
   .bottom-nav {
     gap: 1.5rem;
   }
-  
+
   .bottom-nav .p-button {
     width: 2.75rem;
     height: 2.75rem;
   }
-  
+
   .bottom-nav .p-button i {
     font-size: 1rem;
   }

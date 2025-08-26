@@ -287,38 +287,89 @@ export const useAnkiStore = defineStore('anki', () => {
 
   // Inicializar datos de ejemplo si no hay datos guardados
   function initializeDefaultData() {
+    // Migrar nombres de decks antiguos a nuevos nombres organizados
+    const oldIrregularVerbs = decks.value.find(deck => deck.name === 'Irregular Verbs')
+    if (oldIrregularVerbs) {
+      oldIrregularVerbs.name = 'Irregular Verbs (1-15)'
+      oldIrregularVerbs.description = 'Essential irregular verbs in English with past and past participle forms - Part 1'
+      console.log('Migrated "Irregular Verbs" to "Irregular Verbs (1-15)"')
+    }
+    
+    const oldMoreIrregularVerbs = decks.value.find(deck => deck.name === 'More Irregular Verbs')
+    if (oldMoreIrregularVerbs) {
+      oldMoreIrregularVerbs.name = 'Irregular Verbs (16-30)'
+      oldMoreIrregularVerbs.description = 'Additional essential irregular verbs with past and past participle forms - Part 2'
+      console.log('Migrated "More Irregular Verbs" to "Irregular Verbs (16-30)"')
+    }
+    
     // Verificar si el deck de verbos irregulares existe
-    const irregularVerbsExists = decks.value.some(deck => deck.name === 'Irregular Verbs')
+    const irregularVerbsExists = decks.value.some(deck => deck.name === 'Irregular Verbs (1-15)')
     const verbTensesExists = decks.value.some(deck => deck.name === 'Verb Tenses')
     const businessExists = decks.value.some(deck => deck.name === 'Business English')
     
     // Crear deck de verbos irregulares si no existe
     if (!irregularVerbsExists) {
-      const irregularVerbsDeckId = createDeck('Irregular Verbs', 'Essential irregular verbs in English with past and past participle forms')
+      const irregularVerbsDeckId = createDeck('Irregular Verbs (1-15)', 'Essential irregular verbs in English with past and past participle forms - Part 1')
       
       // Lista de verbos irregulares
       const irregularVerbs = [
-        { spanish: 'quemar', base: 'burn', past: 'burnt', pastParticiple: 'burnt', pronunciation: 'bern / bernt / bernt', example: 'He burnt the old letters yesterday.' },
-        { spanish: 'construir', base: 'build', past: 'built', pastParticiple: 'built', pronunciation: 'bild / bilt / bilt', example: 'They built a treehouse for their kids.' },
-        { spanish: 'atrapar', base: 'catch', past: 'caught', pastParticiple: 'caught', pronunciation: 'cach / cot / cot', example: 'The police caught the thief quickly.' },
-        { spanish: 'elegir', base: 'choose', past: 'chose', pastParticiple: 'chosen', pronunciation: 'chus / chous / chousen', example: 'We chose the best candidate for the job.' },
-        { spanish: 'alimentar', base: 'feed', past: 'fed', pastParticiple: 'fed', pronunciation: 'fid / fed / fed', example: 'She fed the cat an hour ago.' },
-        { spanish: 'soñar', base: 'dream', past: 'dreamt', pastParticiple: 'dreamt', pronunciation: 'drim / dremt / dremt', example: 'I dreamt about flying last night.' },
-        { spanish: 'dibujar', base: 'draw', past: 'drew', pastParticiple: 'drawn', pronunciation: 'dro / dru / dron', example: 'The artist drew a stunning portrait.' },
-        { spanish: 'sentir', base: 'feel', past: 'felt', pastParticiple: 'felt', pronunciation: 'fil / felt / felt', example: 'I felt a sudden pain in my back.' },
-        { spanish: 'encontrar', base: 'find', past: 'found', pastParticiple: 'found', pronunciation: 'faind / faund / faund', example: 'He found a wallet on the street.' },
-        { spanish: 'congelar', base: 'freeze', past: 'froze', pastParticiple: 'frozen', pronunciation: 'fris / frous / frousen', example: 'The water in the pipe froze overnight.' },
-        { spanish: 'huir', base: 'flee', past: 'fled', pastParticiple: 'fled', pronunciation: 'fli / fled / fled', example: 'People fled from the burning building.' },
-        { spanish: 'perdonar', base: 'forgive', past: 'forgave', pastParticiple: 'forgiven', pronunciation: 'for-guiv / for-geiv / for-given', example: 'She finally forgave him for his mistake.' },
-        { spanish: 'esconder', base: 'hide', past: 'hid', pastParticiple: 'hidden', pronunciation: 'jaid / jid / jiden', example: 'The children hid behind the curtain.' },
-        { spanish: 'mostrar', base: 'show', past: 'showed', pastParticiple: 'shown', pronunciation: 'shou / shoud / shoun', example: 'They showed us their wedding photos.' },
-        { spanish: 'disparar', base: 'shoot', past: 'shot', pastParticiple: 'shot', pronunciation: 'shut / shot / shot', example: 'The soldier shot at the target.' }
+        { spanish: 'surgir, levantarse', base: 'arise', past: 'arose', pastParticiple: 'arisen', pronunciation: 'ə-raɪz / ə-roʊz / ə-rɪz-ən', example: 'A problem arose during the meeting.' },
+        { spanish: 'despertar(se)', base: 'awake', past: 'awoke', pastParticiple: 'awoken', pronunciation: 'ə-weɪk / ə-woʊk / ə-woʊ-kən', example: 'I awoke early this morning.' },
+        { spanish: 'ser, estar', base: 'be', past: 'was/were', pastParticiple: 'been', pronunciation: 'bi / wʌz-wər / bɪn', example: 'She has been here all day.' },
+        { spanish: 'soportar, dar a luz', base: 'bear', past: 'bore', pastParticiple: 'borne/born', pronunciation: 'ber / bor / born', example: 'She bore the pain bravely.' },
+        { spanish: 'golpear, vencer', base: 'beat', past: 'beat', pastParticiple: 'beaten', pronunciation: 'bit / bit / bit-ən', example: 'Our team beat theirs 3-1.' },
+        { spanish: 'llegar a ser, convertirse', base: 'become', past: 'became', pastParticiple: 'become', pronunciation: 'bɪ-kʌm / bɪ-keɪm / bɪ-kʌm', example: 'He became a doctor last year.' },
+        { spanish: 'empezar, comenzar', base: 'begin', past: 'began', pastParticiple: 'begun', pronunciation: 'bɪ-gɪn / bɪ-gæn / bɪ-gʌn', example: 'The meeting began at 9 AM.' },
+        { spanish: 'doblar, curvar', base: 'bend', past: 'bent', pastParticiple: 'bent', pronunciation: 'bend / bent / bent', example: 'He bent down to pick up the coin.' },
+        { spanish: 'apostar', base: 'bet', past: 'bet', pastParticiple: 'bet', pronunciation: 'bet / bet / bet', example: 'I bet you can\'t solve this puzzle.' },
+        { spanish: 'atar, encuadernar', base: 'bind', past: 'bound', pastParticiple: 'bound', pronunciation: 'baɪnd / baʊnd / baʊnd', example: 'The prisoner was bound with ropes.' },
+        { spanish: 'ofertar, pujar', base: 'bid', past: 'bid', pastParticiple: 'bid', pronunciation: 'bɪd / bɪd / bɪd', example: 'She bid farewell to her friends.' },
+        { spanish: 'morder', base: 'bite', past: 'bit', pastParticiple: 'bitten', pronunciation: 'baɪt / bɪt / bɪt-ən', example: 'The dog bit the mailman.' },
+        { spanish: 'sangrar', base: 'bleed', past: 'bled', pastParticiple: 'bled', pronunciation: 'blid / bled / bled', example: 'His wound bled for hours.' },
+        { spanish: 'soplar', base: 'blow', past: 'blew', pastParticiple: 'blown', pronunciation: 'bloʊ / blu / bloʊn', example: 'The wind blew all night.' },
+        { spanish: 'romper, quebrar', base: 'break', past: 'broke', pastParticiple: 'broken', pronunciation: 'breɪk / broʊk / broʊ-kən', example: 'She broke her phone yesterday.' }
       ]
 
       irregularVerbs.forEach(verb => {
         const englishText = `${verb.base} - ${verb.past} - ${verb.pastParticiple}`
         addCard(irregularVerbsDeckId, verb.spanish, englishText, verb.pronunciation, [verb.example])
       })
+    } else {
+      // Si el deck ya existe, verificar si necesita actualizarse
+      const existingDeck = decks.value.find(deck => deck.name === 'Irregular Verbs (1-15)')
+      if (existingDeck && existingDeck.cards.length !== 15) {
+        console.log('Updating Irregular Verbs (1-15) deck with new content...')
+        
+        // Limpiar cartas existentes
+        existingDeck.cards = []
+        
+        // Lista actualizada de verbos irregulares
+        const irregularVerbs = [
+          { spanish: 'surgir, levantarse', base: 'arise', past: 'arose', pastParticiple: 'arisen', pronunciation: 'ə-raɪz / ə-roʊz / ə-rɪz-ən', example: 'A problem arose during the meeting.' },
+          { spanish: 'despertar(se)', base: 'awake', past: 'awoke', pastParticiple: 'awoken', pronunciation: 'ə-weɪk / ə-woʊk / ə-woʊ-kən', example: 'I awoke early this morning.' },
+          { spanish: 'ser, estar', base: 'be', past: 'was/were', pastParticiple: 'been', pronunciation: 'bi / wʌz-wər / bɪn', example: 'She has been here all day.' },
+          { spanish: 'soportar, dar a luz', base: 'bear', past: 'bore', pastParticiple: 'borne/born', pronunciation: 'ber / bor / born', example: 'She bore the pain bravely.' },
+          { spanish: 'golpear, vencer', base: 'beat', past: 'beat', pastParticiple: 'beaten', pronunciation: 'bit / bit / bit-ən', example: 'Our team beat theirs 3-1.' },
+          { spanish: 'llegar a ser, convertirse', base: 'become', past: 'became', pastParticiple: 'become', pronunciation: 'bɪ-kʌm / bɪ-keɪm / bɪ-kʌm', example: 'He became a doctor last year.' },
+          { spanish: 'empezar, comenzar', base: 'begin', past: 'began', pastParticiple: 'begun', pronunciation: 'bɪ-gɪn / bɪ-gæn / bɪ-gʌn', example: 'The meeting began at 9 AM.' },
+          { spanish: 'doblar, curvar', base: 'bend', past: 'bent', pastParticiple: 'bent', pronunciation: 'bend / bent / bent', example: 'He bent down to pick up the coin.' },
+          { spanish: 'apostar', base: 'bet', past: 'bet', pastParticiple: 'bet', pronunciation: 'bet / bet / bet', example: 'I bet you can\'t solve this puzzle.' },
+          { spanish: 'atar, encuadernar', base: 'bind', past: 'bound', pastParticiple: 'bound', pronunciation: 'baɪnd / baʊnd / baʊnd', example: 'The prisoner was bound with ropes.' },
+          { spanish: 'ofertar, pujar', base: 'bid', past: 'bid', pastParticiple: 'bid', pronunciation: 'bɪd / bɪd / bɪd', example: 'She bid farewell to her friends.' },
+          { spanish: 'morder', base: 'bite', past: 'bit', pastParticiple: 'bitten', pronunciation: 'baɪt / bɪt / bɪt-ən', example: 'The dog bit the mailman.' },
+          { spanish: 'sangrar', base: 'bleed', past: 'bled', pastParticiple: 'bled', pronunciation: 'blid / bled / bled', example: 'His wound bled for hours.' },
+          { spanish: 'soplar', base: 'blow', past: 'blew', pastParticiple: 'blown', pronunciation: 'bloʊ / blu / bloʊn', example: 'The wind blew all night.' },
+          { spanish: 'romper, quebrar', base: 'break', past: 'broke', pastParticiple: 'broken', pronunciation: 'breɪk / broʊk / broʊ-kən', example: 'She broke her phone yesterday.' }
+        ]
+
+        irregularVerbs.forEach(verb => {
+          const englishText = `${verb.base} - ${verb.past} - ${verb.pastParticiple}`
+          addCard(existingDeck.id, verb.spanish, englishText, verb.pronunciation, [verb.example])
+        })
+        
+        existingDeck.updatedAt = new Date()
+        saveToLocalStorage()
+      }
     }
 
     // Crear deck de tiempos verbales si no existe
@@ -335,6 +386,72 @@ export const useAnkiStore = defineStore('anki', () => {
       addCard(businessDeckId, 'Reunión', 'Meeting', 'miting', ['We have a meeting at 3 PM.'])
       addCard(businessDeckId, 'Informe', 'Report', 'riport', ['Please send me the report by Friday.'])
       addCard(businessDeckId, 'Presupuesto', 'Budget', 'bachet', ['The project is within budget.'])
+    }
+
+    // Crear deck de verbos irregulares adicionales si no existe
+    const moreVerbsExists = decks.value.some(deck => deck.name === 'Irregular Verbs (16-30)')
+    if (!moreVerbsExists) {
+      const moreVerbsDeckId = createDeck('Irregular Verbs (16-30)', 'Additional essential irregular verbs with past and past participle forms - Part 2')
+      
+      // Lista de verbos irregulares adicionales
+      const moreIrregularVerbs = [
+        { spanish: 'criar', base: 'breed', past: 'bred', pastParticiple: 'bred', pronunciation: 'brid / bred / bred', example: 'He bred dogs for many years.' },
+        { spanish: 'traer, llevar', base: 'bring', past: 'brought', pastParticiple: 'brought', pronunciation: 'bring / brot / brot', example: 'She brought wine to the party.' },
+        { spanish: 'transmitir, radiar', base: 'broadcast', past: 'broadcast', pastParticiple: 'broadcast', pronunciation: 'brod-cast / brod-cast / brod-cast', example: 'They broadcast the news live.' },
+        { spanish: 'construir, edificar', base: 'build', past: 'built', pastParticiple: 'built', pronunciation: 'bild / bilt / bilt', example: 'We built a sandcastle.' },
+        { spanish: 'quemar', base: 'burn', past: 'burnt/burned', pastParticiple: 'burnt/burned', pronunciation: 'bern / bernt or bernd / bernt or bernd', example: 'I burnt the cookies by accident.' },
+        { spanish: 'estallar, reventar', base: 'burst', past: 'burst', pastParticiple: 'burst', pronunciation: 'burst / burst / burst', example: 'The balloon burst loudly.' },
+        { spanish: 'comprar', base: 'buy', past: 'bought', pastParticiple: 'bought', pronunciation: 'bai / bot / bot', example: 'He bought a new car.' },
+        { spanish: 'lanzar, arrojar', base: 'cast', past: 'cast', pastParticiple: 'cast', pronunciation: 'cast / cast / cast', example: 'The fisherman cast his net into the sea.' },
+        { spanish: 'atrapar, coger', base: 'catch', past: 'caught', pastParticiple: 'caught', pronunciation: 'cach / cot / cot', example: 'She caught a cold last week.' },
+        { spanish: 'venir', base: 'come', past: 'came', pastParticiple: 'come', pronunciation: 'com / keim / com', example: 'They came to visit us.' },
+        { spanish: 'costar', base: 'cost', past: 'cost', pastParticiple: 'cost', pronunciation: 'cost / cost / cost', example: 'This jacket cost a lot of money.' },
+        { spanish: 'cortar', base: 'cut', past: 'cut', pastParticiple: 'cut', pronunciation: 'cut / cut / cut', example: 'I cut my finger while cooking.' },
+        { spanish: 'elegir', base: 'choose', past: 'chose', pastParticiple: 'chosen', pronunciation: 'chus / chous / chousen', example: 'You chose the perfect gift.' },
+        { spanish: 'agarrarse, aferrarse', base: 'cling', past: 'clung', pastParticiple: 'clung', pronunciation: 'kling / klung / klung', example: 'The child clung to his mother\'s leg.' },
+        { spanish: 'arrastrarse, moverse sigilosamente', base: 'creep', past: 'crept', pastParticiple: 'crept', pronunciation: 'krip / krept / krept', example: 'The cat crept towards the bird.' }
+      ]
+
+      moreIrregularVerbs.forEach(verb => {
+        const englishText = `${verb.base} - ${verb.past} - ${verb.pastParticiple}`
+        addCard(moreVerbsDeckId, verb.spanish, englishText, verb.pronunciation, [verb.example])
+      })
+    } else {
+      // Si el deck ya existe, verificar si necesita actualizarse (por ejemplo, si tiene menos de 15 cartas)
+      const existingDeck = decks.value.find(deck => deck.name === 'Irregular Verbs (16-30)')
+      if (existingDeck && existingDeck.cards.length !== 15) {
+        console.log('Updating Irregular Verbs (16-30) deck with new content...')
+        
+        // Limpiar cartas existentes
+        existingDeck.cards = []
+        
+        // Lista actualizada de verbos irregulares
+        const moreIrregularVerbs = [
+          { spanish: 'criar', base: 'breed', past: 'bred', pastParticiple: 'bred', pronunciation: 'brid / bred / bred', example: 'He bred dogs for many years.' },
+          { spanish: 'traer, llevar', base: 'bring', past: 'brought', pastParticiple: 'brought', pronunciation: 'bring / brot / brot', example: 'She brought wine to the party.' },
+          { spanish: 'transmitir, radiar', base: 'broadcast', past: 'broadcast', pastParticiple: 'broadcast', pronunciation: 'brod-cast / brod-cast / brod-cast', example: 'They broadcast the news live.' },
+          { spanish: 'construir, edificar', base: 'build', past: 'built', pastParticiple: 'built', pronunciation: 'bild / bilt / bilt', example: 'We built a sandcastle.' },
+          { spanish: 'quemar', base: 'burn', past: 'burnt/burned', pastParticiple: 'burnt/burned', pronunciation: 'bern / bernt or bernd / bernt or bernd', example: 'I burnt the cookies by accident.' },
+          { spanish: 'estallar, reventar', base: 'burst', past: 'burst', pastParticiple: 'burst', pronunciation: 'burst / burst / burst', example: 'The balloon burst loudly.' },
+          { spanish: 'comprar', base: 'buy', past: 'bought', pastParticiple: 'bought', pronunciation: 'bai / bot / bot', example: 'He bought a new car.' },
+          { spanish: 'lanzar, arrojar', base: 'cast', past: 'cast', pastParticiple: 'cast', pronunciation: 'cast / cast / cast', example: 'The fisherman cast his net into the sea.' },
+          { spanish: 'atrapar, coger', base: 'catch', past: 'caught', pastParticiple: 'caught', pronunciation: 'cach / cot / cot', example: 'She caught a cold last week.' },
+          { spanish: 'venir', base: 'come', past: 'came', pastParticiple: 'come', pronunciation: 'com / keim / com', example: 'They came to visit us.' },
+          { spanish: 'costar', base: 'cost', past: 'cost', pastParticiple: 'cost', pronunciation: 'cost / cost / cost', example: 'This jacket cost a lot of money.' },
+          { spanish: 'cortar', base: 'cut', past: 'cut', pastParticiple: 'cut', pronunciation: 'cut / cut / cut', example: 'I cut my finger while cooking.' },
+          { spanish: 'elegir', base: 'choose', past: 'chose', pastParticiple: 'chosen', pronunciation: 'chus / chous / chousen', example: 'You chose the perfect gift.' },
+          { spanish: 'agarrarse, aferrarse', base: 'cling', past: 'clung', pastParticiple: 'clung', pronunciation: 'kling / klung / klung', example: 'The child clung to his mother\'s leg.' },
+          { spanish: 'arrastrarse, moverse sigilosamente', base: 'creep', past: 'crept', pastParticiple: 'crept', pronunciation: 'krip / krept / krept', example: 'The cat crept towards the bird.' }
+        ]
+
+        moreIrregularVerbs.forEach(verb => {
+          const englishText = `${verb.base} - ${verb.past} - ${verb.pastParticiple}`
+          addCard(existingDeck.id, verb.spanish, englishText, verb.pronunciation, [verb.example])
+        })
+        
+        existingDeck.updatedAt = new Date()
+        saveToLocalStorage()
+      }
     }
   }
 
