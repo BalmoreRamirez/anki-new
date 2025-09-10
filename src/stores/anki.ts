@@ -110,7 +110,11 @@ export const useAnkiStore = defineStore('anki', () => {
       const firebaseDecks = await FirebaseService.getDecks()
       decks.value = firebaseDecks
       
-      console.log('Loaded', firebaseDecks.length, 'decks from Firebase')
+      // Aplicar limpieza y verificaciones después de cargar
+      ensureUniqueIds()
+      cleanupDecksWithSingleCard()
+
+      console.log('Loaded', decks.value.length, 'decks from Firebase (after cleanup)')
     } catch (err) {
       error.value = 'Error loading data from Firebase'
       console.error('Firebase load error:', err)
@@ -521,6 +525,12 @@ export const useAnkiStore = defineStore('anki', () => {
             updatedAt: new Date(card.updatedAt)
           }))
         }))
+
+        // Aplicar limpieza y verificaciones después de cargar
+        ensureUniqueIds()
+        cleanupDecksWithSingleCard()
+
+        console.log('Loaded', decks.value.length, 'decks from localStorage (after cleanup)')
       } catch (error) {
         console.error('Error loading data from localStorage:', error)
       }
@@ -528,7 +538,92 @@ export const useAnkiStore = defineStore('anki', () => {
   }
 
   function generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2)
+    // Generar un ID más único combinando timestamp, random y un contador global
+    const timestamp = Date.now().toString(36)
+    const random = Math.random().toString(36).substr(2, 9)
+
+    // Usar una variable externa para el contador
+    if (!window.ankiIdCounter) {
+      window.ankiIdCounter = 0
+    }
+    const counter = (++window.ankiIdCounter).toString(36)
+
+    // Verificar que el ID no exista ya en los decks
+    let newId = `${timestamp}-${random}-${counter}`
+    let attempts = 0
+
+    while (decks.value.some(deck => deck.id === newId) && attempts < 10) {
+      const extraRandom = Math.random().toString(36).substr(2, 5)
+      newId = `${timestamp}-${random}-${counter}-${extraRandom}`
+      attempts++
+    }
+
+    return newId
+  }
+
+  // Función para limpiar decks con solo una carta
+  function cleanupDecksWithSingleCard() {
+    const decksToRemove = decks.value.filter(deck => deck.cards.length <= 1)
+
+    if (decksToRemove.length > 0) {
+      console.log(`Removing ${decksToRemove.length} decks with only one card:`,
+        decksToRemove.map(d => `"${d.name}" (${d.cards.length} cards)`))
+
+      // Eliminar decks localmente
+      decks.value = decks.value.filter(deck => deck.cards.length > 1)
+
+      // Si usamos Firebase, eliminar también de allí
+      if (useFirebase.value) {
+        decksToRemove.forEach(async (deck) => {
+          try {
+            await FirebaseService.deleteDeck(deck.id)
+            console.log(`✅ Removed deck "${deck.name}" from Firebase`)
+          } catch (err) {
+            console.error(`❌ Error removing deck "${deck.name}" from Firebase:`, err)
+          }
+        })
+      }
+
+      saveToLocalStorage()
+    }
+  }
+
+  // Función para garantizar IDs únicos en todos los decks existentes
+  function ensureUniqueIds() {
+    const usedIds = new Set<string>()
+    let changesNeeded = false
+
+    decks.value.forEach(deck => {
+      // Verificar ID del deck
+      if (!deck.id || usedIds.has(deck.id)) {
+        deck.id = generateId()
+        changesNeeded = true
+        console.log(`Assigned new ID to deck "${deck.name}": ${deck.id}`)
+      }
+      usedIds.add(deck.id)
+
+      // Verificar IDs de las cartas
+      const cardIds = new Set<string>()
+      deck.cards.forEach(card => {
+        if (!card.id || cardIds.has(card.id)) {
+          card.id = generateId()
+          changesNeeded = true
+          console.log(`Assigned new ID to card "${card.spanish}" in deck "${deck.name}"`)
+        }
+        cardIds.add(card.id)
+
+        // Asegurar que el deckId de la carta coincida con el deck
+        if (card.deckId !== deck.id) {
+          card.deckId = deck.id
+          changesNeeded = true
+        }
+      })
+    })
+
+    if (changesNeeded) {
+      console.log('✅ All IDs have been updated to ensure uniqueness')
+      saveToLocalStorage()
+    }
   }
 
   // Inicializar datos de ejemplo si no hay datos guardados
@@ -971,6 +1066,10 @@ export const useAnkiStore = defineStore('anki', () => {
     saveToLocalStorage,
     loadFromLocalStorage,
     initializeDefaultData,
+
+    // ID Management and Cleanup
+    ensureUniqueIds,
+    cleanupDecksWithSingleCard,
 
     // Configuration Management
     loadGlobalSettings,

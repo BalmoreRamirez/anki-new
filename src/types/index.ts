@@ -101,3 +101,10 @@ export interface StudyStats {
 }
 
 export type ReviewResponse = 'again' | 'hard' | 'good' | 'easy'
+
+// Declaración global para el contador de IDs
+declare global {
+  interface Window {
+    ankiIdCounter?: number
+  }
+}
