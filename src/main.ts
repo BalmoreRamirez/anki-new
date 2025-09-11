@@ -7,6 +7,7 @@ import Aura from '@primevue/themes/aura'
 import 'primeicons/primeicons.css'
 import Tooltip from 'primevue/tooltip'
 import ConfirmationService from 'primevue/confirmationservice'
+import ToastService from 'primevue/toastservice'
 
 import App from './App.vue'
 import router from './router'
@@ -25,6 +26,7 @@ app.use(PrimeVue, {
     }
 })
 app.use(ConfirmationService)
+app.use(ToastService)
 app.directive('tooltip', Tooltip)
 
 app.mount('#app')

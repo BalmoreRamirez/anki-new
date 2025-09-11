@@ -290,12 +290,17 @@ export const useAnkiStore = defineStore('anki', () => {
         }
 
         // Agregar tarjeta a Firebase
-        await FirebaseService.addCardToDeck(deckId, cardData)
+        try {
+          await FirebaseService.addCardToDeck(deckId, cardData)
+          console.log('✅ Card added to Firebase deck:', deckId)
+        } catch (firebaseError) {
+          console.warn('⚠️ Firebase card add failed, using localStorage:', firebaseError)
+          // Si Firebase falla, usar localStorage como respaldo
+          addCardLocal(deckId, spanish, english, pronunciation, examples)
+        }
         
         // No actualizar localmente aquí porque la suscripción en tiempo real
-        // se encargará de actualizar el estado local automáticamente
-        
-        console.log('✅ Card added to Firebase deck:', deckId)
+        // se encargará de actualizar el estado local automáticamente (si Firebase funciona)
       } catch (err) {
         console.error('❌ Error adding card to Firebase:', err)
         // Fallback a localStorage
@@ -1030,6 +1035,45 @@ export const useAnkiStore = defineStore('anki', () => {
     }
   }
 
+  // Admin functions for complete deck management
+  async function createCompleteDeck(deck: Omit<Deck, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    const deckId = generateId()
+    const newDeck: Deck = {
+      ...deck,
+      id: deckId,
+      cards: deck.cards.map(card => ({
+        ...card,
+        id: card.id || generateId(),
+        deckId: deckId,
+        createdAt: card.createdAt || new Date(),
+        updatedAt: card.updatedAt || new Date()
+      })),
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    if (useFirebase.value) {
+      try {
+        // Crear el deck completo con todas sus cartas de una vez
+        await FirebaseService.createDeck(newDeck)
+        console.log('✅ Complete deck created in Firebase:', deckId)
+        
+        // No agregar al estado local aquí, la suscripción en tiempo real
+        // se encargará de actualizar el estado automáticamente
+      } catch (err) {
+        console.error('❌ Error creating complete deck in Firebase:', err)
+        // Fallback a localStorage
+        decks.value.push(newDeck)
+        saveToLocalStorage()
+      }
+    } else {
+      decks.value.push(newDeck)
+      saveToLocalStorage()
+    }
+
+    return deckId
+  }
+
   return {
     // State
     decks,
@@ -1078,6 +1122,9 @@ export const useAnkiStore = defineStore('anki', () => {
     updateDeckSettings,
     deleteDeckSettings,
     subscribeToConfigChanges,
-    initializeConfiguration
+    initializeConfiguration,
+
+    // Admin Functions
+    createCompleteDeck
   }
 })

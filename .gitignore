@@ -28,3 +28,6 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Prevent auto-generated JS files in locales folder
+src/locales/*.js

@@ -2,6 +2,7 @@ import {
   collection, 
   doc, 
   getDocs, 
+  getDoc,
   addDoc, 
   updateDoc, 
   deleteDoc, 
@@ -168,6 +169,14 @@ export class FirebaseService {
       }
 
       const deckRef = doc(db, DECKS_COLLECTION, deckId)
+      
+      // Verificar si el documento existe antes de actualizarlo
+      const deckSnapshot = await getDoc(deckRef)
+      if (!deckSnapshot.exists()) {
+        console.warn(`Deck ${deckId} does not exist in Firebase, skipping update`)
+        return
+      }
+      
       await updateDoc(deckRef, {
         ...updates,
         updatedAt: Timestamp.now()

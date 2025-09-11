@@ -108,3 +108,45 @@ declare global {
     ankiIdCounter?: number
   }
 }
+
+// Auth interfaces
+export interface User {
+  id: string
+  name: string
+  email: string
+  passwordHash: string
+  role: 'user' | 'admin' // Agregar rol de usuario
+  selectedDeckIds: string[]
+  preferences: {
+    studyReminder: boolean
+    reminderTime: string // Formato "HH:mm"
+    dailyGoal: number
+    theme: 'light' | 'dark' | 'auto'
+    language: 'en' | 'es'
+  }
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface UserRegistration {
+  name: string
+  email: string
+  password: string
+}
+
+export interface UserLogin {
+  email: string
+  password: string
+}
+
+export interface AuthResponse {
+  user: Omit<User, 'passwordHash'>
+  token: string
+}
+
+export interface JWTPayload {
+  userId: string
+  email: string
+  iat?: number
+  exp?: number
+}

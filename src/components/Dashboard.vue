@@ -1,263 +1,341 @@
 <template>
-  <div class="min-h-screen p-4 md:p-6">
-    <!-- Header mejorado con Flexbox -->
-    <div class="mb-8 p-6 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30">
-      <div class="flex items-center space-x-4">
-        <div class="flex-shrink-0 w-16 h-16 bg-white/30 rounded-full flex items-center justify-center">
-          <i class="pi pi-graduation-cap text-2xl text-white"></i>
-        </div>
-        <div class="flex-1">
-          <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">English Learning</h1>
-          <p class="text-white/80 text-lg">Master English with spaced repetition • Firebase Cloud Storage</p>
-        </div>
-        <div class="flex-shrink-0">
-          <Button 
-            icon="pi pi-cog"
-            rounded
-            text
-            severity="secondary"
-            class="text-white hover:bg-white/20"
-            @click="showSettings = true"
-            v-tooltip.bottom="'Configuración'"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Estadísticas con Flexbox responsivo -->
-    <div class="mb-8">
-      <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
-        <i class="pi pi-chart-line mr-3"></i>
-        Your Progress
-      </h2>
-      <div class="flex flex-wrap gap-4 md:gap-6">
-        <!-- Total Cards -->
-        <div class="flex-1 min-w-[280px]">
-          <Card class="h-full glassmorphism hover:scale-105 transition-transform duration-300">
-            <template #content>
-              <div class="flex items-center p-6">
-                <div class="flex-shrink-0 w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4">
-                  <i class="pi pi-list text-white text-xl"></i>
-                </div>
-                <div class="flex-1">
-                  <div class="text-3xl font-bold text-gray-800 mb-1">{{ stats.totalCards }}</div>
-                  <div class="text-gray-600 font-medium">Total Cards</div>
-                </div>
-              </div>
-            </template>
-          </Card>
-        </div>
-
-        <!-- Reviewed Today -->
-        <div class="flex-1 min-w-[280px]">
-          <Card class="h-full glassmorphism hover:scale-105 transition-transform duration-300">
-            <template #content>
-              <div class="flex items-center p-6">
-                <div class="flex-shrink-0 w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4">
-                  <i class="pi pi-check text-white text-xl"></i>
-                </div>
-                <div class="flex-1">
-                  <div class="text-3xl font-bold text-gray-800 mb-1">{{ stats.reviewedToday }}</div>
-                  <div class="text-gray-600 font-medium">Reviewed Today</div>
-                </div>
-              </div>
-            </template>
-          </Card>
-        </div>
-
-        <!-- Cards Due -->
-        <div class="flex-1 min-w-[280px]">
-          <Card class="h-full glassmorphism hover:scale-105 transition-transform duration-300">
-            <template #content>
-              <div class="flex items-center p-6">
-                <div class="flex-shrink-0 w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mr-4">
-                  <i class="pi pi-clock text-white text-xl"></i>
-                </div>
-                <div class="flex-1">
-                  <div class="text-3xl font-bold text-gray-800 mb-1">{{ stats.dueForReview }}</div>
-                  <div class="text-gray-600 font-medium">Due for Review</div>
-                </div>
-              </div>
-            </template>
-          </Card>
-        </div>
-
-        <!-- Study Streak -->
-        <div class="flex-1 min-w-[280px]">
-          <Card class="h-full glassmorphism hover:scale-105 transition-transform duration-300">
-            <template #content>
-              <div class="flex items-center p-6">
-                <div class="flex-shrink-0 w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mr-4">
-                  <i class="pi pi-star text-white text-xl"></i>
-                </div>
-                <div class="flex-1">
-                  <div class="text-3xl font-bold text-gray-800 mb-1">{{ stats.studyStreak }}</div>
-                  <div class="text-gray-600 font-medium">Day Streak</div>
-                </div>
-              </div>
-            </template>
-          </Card>
+  <div class="dashboard min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">Anki Learning Dashboard</h1>
+            <p class="text-sm text-gray-600 mt-1">
+              <span v-if="authStore.isAuthenticated">
+                Welcome back, {{ authStore.userName }} • 
+                {{ authStore.selectedDeckIds.length }} decks selected •
+              </span>
+              Firebase Cloud Storage
+            </p>
+          </div>
+          <div class="flex-shrink-0 flex space-x-2">
+            <Button
+              v-if="authStore.isAuthenticated && authStore.isAdmin"
+              @click="goToAdmin"
+              icon="pi pi-shield"
+              label="Admin Panel"
+              severity="danger"
+              outlined
+            />
+            <Button
+              v-if="authStore.isAuthenticated"
+              icon="pi pi-user"
+              rounded
+              text
+              @click="showUserSettings = true"
+              severity="secondary"
+              v-tooltip.top="'User Settings'"
+            />
+            <Button
+              icon="pi pi-cog"
+              rounded
+              text
+              @click="showSettings = true"
+            />
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Decks con Flexbox responsivo -->
-    <div class="mb-8">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h2 class="text-2xl font-bold text-white mb-4 sm:mb-0 flex items-center">
-          <i class="pi pi-folder mr-3"></i>
-          Your Decks
-        </h2>
-        <div class="flex gap-3">
-          <!-- Botón temporal para resetear tarjetas -->
-          <Button
-            @click="resetCards"
-            icon="pi pi-refresh"
-            label="Reset Cards"
-            severity="warning"
-            class="bg-orange-500 hover:bg-orange-600 border-orange-500 px-4 py-2 text-white font-medium rounded-lg transition-all duration-200"
-            v-tooltip="'Make all cards available for review'"
-          />
+    <!-- Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Quick Actions -->
+      <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-medium text-gray-900">Your Study Decks</h2>
+          <div class="flex space-x-3">
+            <Button
+              @click="$emit('create-deck')"
+              icon="pi pi-plus"
+              label="Create Deck"
+              severity="success"
+            />
+            <Button
+              @click="resetCards"
+              icon="pi pi-refresh"
+              label="Reset All Cards"
+              severity="warning"
+              outlined
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Decks Grid -->
+      <div v-if="filteredDecks.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div 
+          v-for="deck in filteredDecks" 
+          :key="deck.id" 
+          class="deck-card group relative bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all duration-300 overflow-hidden"
+        >
+          <!-- Difficulty Color Bar -->
+          <div 
+            class="absolute top-0 left-0 right-0 h-1"
+            :class="{
+              'bg-green-400': deck.difficulty === 'beginner',
+              'bg-yellow-400': deck.difficulty === 'intermediate', 
+              'bg-red-400': deck.difficulty === 'advanced'
+            }"
+          ></div>
+
+          <!-- Card Content -->
+          <div class="p-6 space-y-4">
+            <!-- Header -->
+            <div class="flex items-start justify-between">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center space-x-2 mb-2">
+                  <div 
+                    class="w-3 h-3 rounded-full"
+                    :class="{
+                      'bg-green-400': deck.difficulty === 'beginner',
+                      'bg-yellow-400': deck.difficulty === 'intermediate',
+                      'bg-red-400': deck.difficulty === 'advanced'
+                    }"
+                  ></div>
+                  <span 
+                    class="text-xs font-medium uppercase tracking-wide"
+                    :class="{
+                      'text-green-600': deck.difficulty === 'beginner',
+                      'text-yellow-600': deck.difficulty === 'intermediate',
+                      'text-red-600': deck.difficulty === 'advanced'
+                    }"
+                  >
+                    {{ deck.difficulty }}
+                  </span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  {{ deck.name }}
+                </h3>
+                <p v-if="deck.description" class="text-sm text-gray-600 mt-2 line-clamp-2 leading-relaxed">
+                  {{ deck.description }}
+                </p>
+              </div>
+              
+              <!-- Action Menu -->
+              <div class="flex space-x-1 ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  @click="$emit('edit-deck', deck)"
+                  icon="pi pi-pencil"
+                  size="small"
+                  text
+                  rounded
+                  class="!w-8 !h-8 hover:bg-blue-50 hover:text-blue-600"
+                />
+                <Button
+                  @click="confirmDeleteDeck(deck)"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  size="small"
+                  text
+                  rounded
+                  class="!w-8 !h-8 hover:bg-red-50"
+                />
+              </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-lg">
+              <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-1">
+                  <i class="pi pi-book text-blue-500 text-sm"></i>
+                  <span class="text-sm font-medium text-gray-700">{{ deck.cards.length }}</span>
+                  <span class="text-xs text-gray-500">cards</span>
+                </div>
+                <div v-if="deck.estimatedTime" class="flex items-center space-x-1">
+                  <i class="pi pi-clock text-green-500 text-sm"></i>
+                  <span class="text-xs text-gray-500">{{ deck.estimatedTime }}min</span>
+                </div>
+              </div>
+              
+              <!-- Progress Indicator -->
+              <div class="flex items-center space-x-2">
+                <div class="w-16 bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    class="bg-gradient-to-r from-blue-400 to-blue-600 h-1.5 rounded-full transition-all duration-300"
+                    :style="{ width: getProgressPercentage(deck) + '%' }"
+                  ></div>
+                </div>
+                <span class="text-xs text-gray-500">{{ getProgressPercentage(deck) }}%</span>
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div v-if="deck.tags && deck.tags.length > 0" class="flex flex-wrap gap-1">
+              <span 
+                v-for="tag in deck.tags.slice(0, 3)" 
+                :key="tag"
+                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                {{ tag }}
+              </span>
+              <span 
+                v-if="deck.tags.length > 3"
+                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
+              >
+                +{{ deck.tags.length - 3 }}
+              </span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex space-x-2 pt-2">
+              <Button
+                @click="$emit('study-deck', deck)"
+                label="Study Now"
+                icon="pi pi-play"
+                class="flex-1 !bg-gradient-to-r !from-blue-500 !to-blue-600 hover:!from-blue-600 hover:!to-blue-700 !border-0 !text-white !font-medium !py-2.5"
+                size="small"
+              />
+              <Button
+                @click="$emit('manage-cards', deck)"
+                icon="pi pi-cog"
+                outlined
+                rounded
+                class="!w-10 !h-10 hover:!bg-gray-50"
+              />
+            </div>
+
+            <!-- Last Study Info -->
+            <div v-if="deck.updatedAt" class="text-xs text-gray-400 text-center pt-2 border-t border-gray-100">
+              Updated {{ formatDate(deck.updatedAt) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else class="text-center py-12">
+        <div class="max-w-md mx-auto">
+          <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <i class="pi pi-folder text-2xl text-gray-400"></i>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No decks available</h3>
+          <p class="text-gray-600 mb-6">Get started by creating your first study deck.</p>
           <Button
             @click="$emit('create-deck')"
             icon="pi pi-plus"
-            label="Create Deck"
-            class="bg-green-500 hover:bg-green-600 border-green-500 px-6 py-3 text-white font-semibold rounded-lg transition-all duration-200 hover:-translate-y-1"
-          />
-        </div>
-      </div>
-
-      <div class="flex flex-wrap gap-6">
-        <div v-for="deck in decks" :key="deck.id" class="flex-1 min-w-[320px] max-w-md">
-          <Card class="h-full glassmorphism hover:scale-105 transition-all duration-300 cursor-pointer">
-            <template #header>
-              <div class="p-6 pb-0">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-xl font-bold text-gray-800">{{ deck.name }}</h3>
-                  <div class="flex space-x-2">
-                    <Button 
-                      icon="pi pi-pencil" 
-                      @click.stop="$emit('edit-deck', deck)"
-                      class="p-button-text p-button-sm text-blue-600 hover:bg-blue-50"
-                      v-tooltip="'Edit Deck'"
-                    />
-                    <Button 
-                      icon="pi pi-trash" 
-                      @click.stop="confirmDeleteDeck(deck)"
-                      class="p-button-text p-button-sm text-red-600 hover:bg-red-50"
-                      v-tooltip="'Delete Deck'"
-                    />
-                  </div>
-                </div>
-              </div>
-            </template>
-            <template #content>
-              <div class="px-6">
-                <p class="text-gray-600 mb-4 h-12 overflow-hidden">{{ deck.description }}</p>
-                
-                <div class="flex flex-wrap gap-3 mb-6">
-                  <div class="flex items-center space-x-2 bg-blue-50 px-3 py-1 rounded-lg">
-                    <i class="pi pi-list text-blue-600"></i>
-                    <span class="text-sm font-medium text-blue-800">{{ deck.cards.length }} cards</span>
-                  </div>
-                  <div class="flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-lg">
-                    <i class="pi pi-clock text-green-600"></i>
-                    <span class="text-sm font-medium text-green-800">{{ getDueCards(deck).length }} due</span>
-                  </div>
-                </div>
-
-                <div class="flex flex-col sm:flex-row gap-3">
-                  <Button 
-                    @click="$emit('study-deck', deck)"
-                    :disabled="getDueCards(deck).length === 0"
-                    :label="getDueCards(deck).length > 0 ? 'Study Now' : 'No cards due'"
-                    icon="pi pi-play"
-                    class="flex-1 bg-blue-500 hover:bg-blue-600 border-blue-500 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  <Button 
-                    @click="$emit('manage-cards', deck)"
-                    icon="pi pi-cog"
-                    label="Manage"
-                    class="flex-1 bg-gray-500 hover:bg-gray-600 border-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 hover:-translate-y-1"
-                  />
-                </div>
-              </div>
-            </template>
-          </Card>
-        </div>
-
-        <!-- Empty state cuando no hay decks -->
-        <div v-if="decks.length === 0" class="w-full flex flex-col items-center justify-center py-12">
-          <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-6">
-            <i class="pi pi-folder-open text-4xl text-white/60"></i>
-          </div>
-          <h3 class="text-xl font-semibold text-white mb-2">No decks yet</h3>
-          <p class="text-white/70 text-center mb-6 max-w-md">
-            Create your first deck to start learning English with spaced repetition
-          </p>
-          <Button 
-            @click="$emit('create-deck')" 
-            icon="pi pi-plus" 
             label="Create Your First Deck"
-            class="bg-green-500 hover:bg-green-600 border-green-500 px-6 py-3 text-white font-semibold rounded-lg transition-all duration-200 hover:-translate-y-1"
+            severity="success"
           />
         </div>
       </div>
     </div>
-    
+
     <!-- Settings Dialog -->
-    <Dialog 
-      v-model:visible="showSettings" 
-      modal 
-      :style="{ width: '90vw', maxWidth: '900px' }"
-      :dismissableMask="true"
+    <Dialog
+      v-model:visible="showSettings"
+      header="Global Settings"
+      :modal="true"
       :closable="true"
-      class="settings-dialog"
+      class="w-full max-w-md"
     >
-      <div class="p-6">
-        <h2 class="text-2xl font-bold mb-4">⚙️ Configuración Global</h2>
-        <p class="text-gray-600 mb-4">
-          El sistema de configuración está en desarrollo. Próximamente podrás personalizar:
-        </p>
-        <ul class="list-disc list-inside space-y-2 text-gray-600 mb-6">
-          <li>Idioma y zona horaria</li>
-          <li>Configuración de Text-to-Speech</li>
-          <li>Preferencias de sincronización</li>
-          <li>Configuración de estudio por deck</li>
-          <li>Estadísticas y respaldos</li>
-        </ul>
-        <div class="flex justify-center">
-          <Button 
-            label="Cerrar"
-            icon="pi pi-times"
+      <div class="space-y-4">
+        <p class="text-gray-600">Global settings will be available soon.</p>
+        <div class="flex justify-end">
+          <Button
             @click="showSettings = false"
+            label="Close"
+            severity="secondary"
           />
         </div>
       </div>
     </Dialog>
-    
-    <!-- ConfirmDialog para confirmación de eliminación -->
+
+    <!-- User Settings Dialog -->
+    <UserSettings 
+      :visible="showUserSettings" 
+      @update:visible="showUserSettings = $event" 
+    />
+
+    <!-- Confirm Dialog -->
     <ConfirmDialog />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import Card from 'primevue/card'
 import Button from 'primevue/button'
-import ConfirmDialog from 'primevue/confirmdialog'
 import Dialog from 'primevue/dialog'
+import ConfirmDialog from 'primevue/confirmdialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useAnkiStore } from '../stores/anki'
+import { useAuthStore } from '../stores/auth'
+import UserSettings from './UserSettings.vue'
 import type { Deck } from '../types/index'
 
+interface Props {
+  decks: Deck[]
+}
+
+const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  'create-deck': []
+  'edit-deck': [deck: Deck]
+  'delete-deck': [id: string]
+  'study-deck': [deck: Deck]
+  'manage-cards': [deck: Deck]
+}>()
+
 const confirm = useConfirm()
+const router = useRouter()
 const ankiStore = useAnkiStore()
+const authStore = useAuthStore()
 
 // Settings dialog state
 const showSettings = ref(false)
+const showUserSettings = ref(false)
 
-// Función para resetear todas las tarjetas
+// Filter decks based on user selection
+const filteredDecks = computed(() => {
+  if (!authStore.isAuthenticated) {
+    return props.decks
+  }
+
+  // If user has no deck selection, show all decks
+  if (authStore.selectedDeckIds.length === 0) {
+    return props.decks
+  }
+
+  // Show only selected decks
+  return props.decks.filter(deck => authStore.selectedDeckIds.includes(deck.id))
+})
+
+// Navigate to admin panel
+function goToAdmin() {
+  router.push('/admin')
+}
+
+// Calculate progress percentage based on cards studied
+function getProgressPercentage(deck: Deck): number {
+  if (deck.cards.length === 0) return 0
+  
+  // Calculate based on cards that have been reviewed at least once
+  const studiedCards = deck.cards.filter(card => card.reviewCount > 0)
+  return Math.round((studiedCards.length / deck.cards.length) * 100)
+}
+
+// Format date for display
+function formatDate(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const now = new Date()
+  const diffInHours = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60 * 60))
+  
+  if (diffInHours < 1) return 'Just now'
+  if (diffInHours < 24) return `${diffInHours}h ago`
+  if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`
+  
+  return dateObj.toLocaleDateString()
+}
+
+// Reset all cards function
 function resetCards() {
   confirm.require({
     message: 'This will make all cards available for review immediately. Are you sure?',
@@ -270,7 +348,7 @@ function resetCards() {
   })
 }
 
-// Función para confirmar eliminación de deck
+// Confirm deck deletion
 function confirmDeleteDeck(deck: Deck) {
   const cardCount = deck.cards.length
   const message = cardCount > 0 
@@ -289,69 +367,31 @@ function confirmDeleteDeck(deck: Deck) {
     }
   })
 }
-
-interface Props {
-  decks: Deck[]
-}
-
-const props = defineProps<Props>()
-
-const emit = defineEmits<{
-  'create-deck': []
-  'edit-deck': [deck: Deck]
-  'delete-deck': [id: string]
-  'study-deck': [deck: Deck]
-  'manage-cards': [deck: Deck]
-}>()
-
-const stats = computed(() => {
-  const totalCards = props.decks.reduce((sum, deck) => sum + deck.cards.length, 0)
-  const dueForReview = props.decks.reduce((sum, deck) => sum + getDueCards(deck).length, 0)
-  const reviewedToday = props.decks.reduce((sum, deck) => {
-    return sum + deck.cards.filter(card => {
-      const today = new Date().toDateString()
-      return card.updatedAt && new Date(card.updatedAt).toDateString() === today
-    }).length
-  }, 0)
-
-  return {
-    totalCards,
-    dueForReview,
-    reviewedToday,
-    studyStreak: 7 // Placeholder - implementar lógica real
-  }
-})
-
-function getDueCards(deck: Deck) {
-  const now = new Date()
-  return deck.cards.filter(card => {
-    try {
-      const reviewDate = card.nextReviewDate ? new Date(card.nextReviewDate) : new Date(0)
-      
-      // Si la fecha es inválida, considerar la tarjeta como disponible
-      if (isNaN(reviewDate.getTime())) {
-        return true
-      }
-      
-      return reviewDate <= now
-    } catch (error) {
-      // En caso de error, hacer la tarjeta disponible
-      return true
-    }
-  })
-}
 </script>
 
 <style scoped>
-.glassmorphism {
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+.deck-card {
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.glassmorphism:hover {
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+.deck-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>
