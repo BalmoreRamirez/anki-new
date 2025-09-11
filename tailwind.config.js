@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{vue,js,ts,jsx,tsx}",
   ],
+  darkMode: 'class', // Habilitar modo oscuro con clase
   theme: {
     extend: {
       fontFamily: {

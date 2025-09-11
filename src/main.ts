@@ -1,4 +1,5 @@
 import './assets/tailwind.css'
+import './assets/theme.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -11,10 +12,12 @@ import ToastService from 'primevue/toastservice'
 
 import App from './App.vue'
 import router from './router'
+import { useSettingsStore } from './stores/settings'
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
 app.use(PrimeVue, {
     theme: {
@@ -28,5 +31,9 @@ app.use(PrimeVue, {
 app.use(ConfirmationService)
 app.use(ToastService)
 app.directive('tooltip', Tooltip)
+
+// Inicializar configuración global
+const settingsStore = useSettingsStore()
+settingsStore.init()
 
 app.mount('#app')

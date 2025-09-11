@@ -1,15 +1,15 @@
 <template>
-  <div class="dashboard min-h-screen bg-gray-50">
+  <div class="dashboard min-h-screen" :style="{ backgroundColor: colors.background }">
     <!-- Header -->
-    <div class="bg-white shadow-sm border-b">
+    <div class="shadow-sm border-b" :style="{ backgroundColor: colors.surface, borderColor: colors.border }">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">Anki Learning Dashboard</h1>
-            <p class="text-sm text-gray-600 mt-1">
+            <h1 class="text-2xl font-bold" :style="{ color: colors.textPrimary }">{{ t('dashboard') }} - Anki Learning</h1>
+            <p class="text-sm mt-1" :style="{ color: colors.textSecondary }">
               <span v-if="authStore.isAuthenticated">
-                Welcome back, {{ authStore.userName }} • 
-                {{ authStore.selectedDeckIds.length }} decks selected •
+                {{ t('welcome') }}, {{ authStore.userName }} • 
+                {{ authStore.selectedDeckIds.length }} {{ t('decks').toLowerCase() }} •
               </span>
               Firebase Cloud Storage
             </p>
@@ -229,20 +229,18 @@
     <!-- Settings Dialog -->
     <Dialog
       v-model:visible="showSettings"
-      header="Global Settings"
+      :header="t('settings')"
       :modal="true"
       :closable="true"
-      class="w-full max-w-md"
+      class="w-full max-w-2xl"
     >
-      <div class="space-y-4">
-        <p class="text-gray-600">Global settings will be available soon.</p>
-        <div class="flex justify-end">
-          <Button
-            @click="showSettings = false"
-            label="Close"
-            severity="secondary"
-          />
-        </div>
+      <GlobalSettings />
+      <div class="flex justify-end mt-6">
+        <Button
+          @click="showSettings = false"
+          :label="t('close')"
+          severity="secondary"
+        />
       </div>
     </Dialog>
 
@@ -267,7 +265,9 @@ import ConfirmDialog from 'primevue/confirmdialog'
 import { useConfirm } from 'primevue/useconfirm'
 import { useAnkiStore } from '../stores/anki'
 import { useAuthStore } from '../stores/auth'
+import { useSettings } from '@/composables/useSettings'
 import UserSettings from './UserSettings.vue'
+import GlobalSettings from './GlobalSettings.vue'
 import type { Deck } from '../types/index'
 
 interface Props {
@@ -275,6 +275,9 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// Usar el sistema de configuración global
+const { t, colors, resolvedTheme } = useSettings()
 
 const emit = defineEmits<{
   'create-deck': []
