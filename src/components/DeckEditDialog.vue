@@ -386,6 +386,8 @@ function addCard() {
     id: generateId(),
     spanish: newCard.spanish.trim(),
     english: newCard.english.trim(),
+    front: newCard.spanish.trim(),
+    back: newCard.english.trim(),
     pronunciation: newCard.pronunciation.trim() || undefined,
     deckId: props.deck?.id || '',
     difficulty: newCard.difficulty,
@@ -394,7 +396,9 @@ function addCard() {
     easeFactor: 2.5,
     interval: 0,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    lastReviewed: new Date(),
+    nextReview: new Date()
   }
 
   formData.cards.push(card)

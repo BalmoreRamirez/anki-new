@@ -26,7 +26,7 @@
 
     <!-- Modo Gestión de Tarjetas -->
     <CardManager
-      v-else-if="currentMode === 'cards'"
+      v-else-if="currentMode === 'cards' && selectedDeck"
       :deck="selectedDeck"
       @back="currentMode = 'decks'"
       @add-card="addCard"
@@ -115,7 +115,7 @@ import CardManager from "../components/CardManager.vue";
 import FlashCard from "../components/FlashCard.vue";
 import Button from "primevue/button";
 import ProgressBar from "primevue/progressbar";
-import type { ReviewResponse, Deck, Flashcard } from "../types";
+import type { ReviewResponse, Deck, Flashcard, NewFlashcard } from "../types";
 
 const ankiStore = useAnkiStore();
 
@@ -262,7 +262,7 @@ function deleteDeck(id: string) {
   ankiStore.deleteDeck(id);
 }
 
-async function addCard(card: Omit<Flashcard, "id" | "createdAt">) {
+async function addCard(card: NewFlashcard) {
   if (selectedDeckId.value) {
     try {
       await ankiStore.addCard(
@@ -278,22 +278,9 @@ async function addCard(card: Omit<Flashcard, "id" | "createdAt">) {
   }
 }
 
-function updateCard(
-  cardId: string,
-  spanish: string,
-  english: string,
-  pronunciation?: string,
-  examples?: string[]
-) {
+function updateCard(card: Flashcard) {
   // Implementar en el store
-  console.log(
-    "Update card:",
-    cardId,
-    spanish,
-    english,
-    pronunciation,
-    examples
-  );
+  console.log("Update card:", card);
 }
 
 async function deleteCard(cardId: string) {

@@ -281,7 +281,12 @@ function saveDeck() {
     const newDeck = {
       name: deckForm.name.trim(),
       description: deckForm.description.trim() || undefined,
-      cards: []
+      category: deckForm.category,
+      cards: [],
+      tags: [],
+      isPublic: false,
+      difficulty: 'beginner' as const,
+      estimatedTime: 30
     }
     
     emit('create-deck', newDeck)

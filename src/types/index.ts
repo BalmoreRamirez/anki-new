@@ -12,6 +12,25 @@ export interface Flashcard {
   interval: number
   createdAt: Date
   updatedAt: Date
+  // Aliases for easier access in components
+  front?: string
+  back?: string
+  lastReviewed?: Date
+  nextReview?: Date
+}
+
+// Helper type for creating new cards
+export type NewFlashcard = Omit<Flashcard, 'id' | 'createdAt' | 'updatedAt' | 'front' | 'back' | 'lastReviewed' | 'nextReview'>
+
+// Factory function to create flashcard with computed properties
+export function createFlashcard(data: NewFlashcard & { id: string; createdAt: Date; updatedAt: Date }): Flashcard {
+  return {
+    ...data,
+    front: data.spanish,
+    back: data.english,
+    lastReviewed: data.updatedAt,
+    nextReview: data.nextReviewDate
+  }
 }
 
 export interface DeckSettings {

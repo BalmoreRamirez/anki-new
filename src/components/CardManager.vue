@@ -165,19 +165,19 @@
                 <!-- Card Content -->
                 <div class="flex-1">
                   <div class="flex flex-col sm:flex-row sm:space-x-6 space-y-4 sm:space-y-0">
-                    <!-- Front -->
+                    <!-- Front (English) -->
                     <div class="flex-1">
-                      <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Front</h4>
-                      <p class="text-lg font-semibold text-gray-800">{{ card.front }}</p>
+                      <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">English</h4>
+                      <p class="text-lg font-semibold text-gray-800">{{ card.front || card.english }}</p>
                       <p v-if="card.pronunciation" class="text-sm text-gray-600 font-mono mt-1">
                         {{ card.pronunciation }}
                       </p>
                     </div>
                     
-                    <!-- Back -->
+                    <!-- Back (Spanish) -->
                     <div class="flex-1">
-                      <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Back</h4>
-                      <p class="text-lg font-semibold text-gray-800">{{ card.back }}</p>
+                      <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Spanish</h4>
+                      <p class="text-lg font-semibold text-gray-800">{{ card.back || card.spanish }}</p>
                     </div>
                   </div>
 
@@ -209,16 +209,16 @@
                         Reviews: {{ card.reviewCount }}
                       </span>
                     </div>
-                    <div v-if="card.lastReviewed" class="flex items-center space-x-2 bg-purple-50 px-3 py-1 rounded-lg">
+                    <div class="flex items-center space-x-2 bg-purple-50 px-3 py-1 rounded-lg">
                       <i class="pi pi-calendar text-purple-600"></i>
                       <span class="text-sm font-medium text-purple-800">
-                        Last: {{ formatDate(card.lastReviewed) }}
+                        Last: {{ formatDate(card.lastReviewed || card.updatedAt) }}
                       </span>
                     </div>
-                    <div v-if="card.nextReview" class="flex items-center space-x-2 bg-orange-50 px-3 py-1 rounded-lg">
+                    <div class="flex items-center space-x-2 bg-orange-50 px-3 py-1 rounded-lg">
                       <i class="pi pi-clock text-orange-600"></i>
                       <span class="text-sm font-medium text-orange-800">
-                        Next: {{ formatDate(card.nextReview) }}
+                        Next: {{ formatDate(card.nextReview || card.nextReviewDate) }}
                       </span>
                     </div>
                   </div>
@@ -321,7 +321,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Dropdown from 'primevue/dropdown'
 import Dialog from 'primevue/dialog'
-import type { Deck, Flashcard } from '@/types'
+import type { Deck, Flashcard, NewFlashcard } from '@/types'
 
 interface Props {
   deck: Deck
@@ -330,7 +330,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  'add-card': [card: Omit<Flashcard, 'id' | 'createdAt'>]
+  'add-card': [card: NewFlashcard]
   'update-card': [card: Flashcard]
   'delete-card': [cardId: string]
   'reset-card': [cardId: string]
@@ -365,8 +365,8 @@ const filteredCards = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(card => 
-      card.front.toLowerCase().includes(query) ||
-      card.back.toLowerCase().includes(query) ||
+      (card.front || card.english).toLowerCase().includes(query) ||
+      (card.back || card.spanish).toLowerCase().includes(query) ||
       (card.examples && card.examples.some(ex => ex.toLowerCase().includes(query)))
     )
   }
@@ -383,7 +383,7 @@ const filteredCards = computed(() => {
         case 'mature':
           return card.reviewCount > 0 && card.easeFactor >= 2.5
         case 'due':
-          return !card.nextReview || new Date(card.nextReview) <= now
+          return !card.nextReviewDate || new Date(card.nextReviewDate) <= now
         default:
           return true
       }
@@ -413,11 +413,17 @@ function saveCard() {
     editingCard.value = null
   } else {
     // Create new card
-    const newCard = {
+    const newCard: NewFlashcard = {
       english: cardForm.front.trim(),  // front = english
       spanish: cardForm.back.trim(),   // back = spanish
       pronunciation: cardForm.pronunciation.trim() || undefined,
-      examples: cleanExamples.length > 0 ? cleanExamples : undefined
+      examples: cleanExamples.length > 0 ? cleanExamples : undefined,
+      deckId: props.deck.id,
+      difficulty: 'medium' as const,
+      nextReviewDate: new Date(),
+      reviewCount: 0,
+      easeFactor: 2.5,
+      interval: 1
     }
     emit('add-card', newCard)
   }
