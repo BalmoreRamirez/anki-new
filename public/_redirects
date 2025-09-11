@@ -1,0 +1,11 @@
+# Netlify redirects file for Vue Router SPA
+# This handles client-side routing by redirecting all routes to index.html
+
+# Redirect all routes to index.html for Vue Router to handle
+/*    /index.html   200
+
+# Optional: Handle specific API routes if you have them
+# /api/*  https://your-api-domain.com/api/:splat  200
+
+# Optional: Handle 404 errors
+# /404.html   /404.html   404
